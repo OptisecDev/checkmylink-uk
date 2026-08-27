@@ -106,6 +106,55 @@ class TestTyposquattingDetection:
     def test_unrelated_domain_is_not_flagged(self):
         assert check_typosquatting("example.com") is None
 
+    @pytest.mark.parametrize(
+        "suspicious_domain",
+        [
+            "barclays-secure-login.com",
+            "hsbc-verify-account.net",
+            "royalmail-redelivery-fee.com",
+            "lloyds-secure-login.com",
+            "natwest-verify-account.com",
+            "santander-secure-login.com",
+            "hmrc-tax-refund-claim.com",
+            "dvla-vehicle-tax-renew.com",
+            "tvlicensing-payment-update.com",
+            "dpd-redelivery-confirm.com",
+            "evri-parcel-tracking-update.com",
+        ],
+    )
+    def test_brand_name_plus_suspicious_keyword_is_flagged(self, suspicious_domain):
+        """A domain that embeds the real brand name verbatim (no typo at all)
+        alongside phishing-style keywords must still be caught - this was the
+        production bug where e.g. "barclays-secure-login.com" came back safe
+        because only edit-distance against the whole hostname was checked."""
+        match = check_typosquatting(suspicious_domain)
+        assert match is not None, f"{suspicious_domain} should have been flagged as a brand impersonation"
+        assert match.kind == "brand_substring"
+
+    def test_brand_substring_signal_is_never_reported_safe(self):
+        for suspicious_domain in [
+            "barclays-secure-login.com",
+            "hsbc-verify-account.net",
+            "royalmail-redelivery-fee.com",
+        ]:
+            signal = scan_engine.check_typosquat_signal(suspicious_domain)
+            assert signal.status in (STATUS_DANGER,), (
+                f"{suspicious_domain} must be Danger (or at minimum Caution), got {signal.status}"
+            )
+
+    @pytest.mark.parametrize(
+        "legit_subdomain",
+        [
+            "secure.barclays.co.uk",
+            "online.hsbc.co.uk",
+            "www.lloyds.co.uk",
+            "hmrc.gov.uk",
+            "dvla.gov.uk",
+        ],
+    )
+    def test_genuine_subdomains_of_real_brand_sites_are_not_flagged(self, legit_subdomain):
+        assert check_typosquatting(legit_subdomain) is None
+
     def test_typosquat_signal_feeds_into_danger_verdict(self, all_checks_safe, monkeypatch):
         monkeypatch.setattr(
             scan_engine,

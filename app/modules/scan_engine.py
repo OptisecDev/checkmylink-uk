@@ -230,10 +230,17 @@ def check_typosquat_signal(domain: str) -> Signal:
     try:
         match = check_typosquatting(domain)
         if match:
+            if match.kind == "brand_substring":
+                reason = (
+                    f"This domain contains {match.brand}'s name but is not "
+                    f"{match.brand}'s real website ({match.legit_domain}) - a common phishing tactic."
+                )
+            else:
+                reason = f"This domain looks like a near-copy of {match.brand}'s real website ({match.legit_domain})."
             return Signal(
                 name="Brand impersonation check",
                 status=STATUS_DANGER,
-                reason=f"This domain looks like a near-copy of {match.brand}'s real website ({match.legit_domain}).",
+                reason=reason,
                 score=50,
             )
         return Signal(
