@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CheckMyLink UK - Is this link safe?{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <a href="/" class="logo">🛡️ CheckMyLink <span>UK</span></a>
+        <p class="tagline">Free help to spot scams and fake links</p>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <p class="take-five">
+            This site follows the UK's <strong>Take Five to Stop Fraud</strong> advice:
+            <strong>Stop &middot; Challenge &middot; Protect</strong>.
+            Learn more at
+            <a href="https://www.takefive-stopfraud.org.uk" target="_blank" rel="noopener noreferrer">takefive-stopfraud.org.uk</a>.
+        </p>
+        <p class="disclaimer">
+            CheckMyLink UK is an independent, free, non-profit community tool.
+            It is <strong>not</strong> officially affiliated with Take Five, Action Fraud,
+            or any bank or government body. Always trust your own judgement -
+            if something feels wrong, it probably is.
+        </p>
+    </footer>
+</body>
+</html>

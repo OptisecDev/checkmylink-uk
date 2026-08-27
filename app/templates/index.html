@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+    <h1>Not sure if a link is safe?</h1>
+    <p class="hero-sub">Paste it below and we'll check it for you. It's free, and takes a few seconds.</p>
+
+    {% if error %}
+    <p class="form-error">{{ error }}</p>
+    {% endif %}
+
+    <form action="/check" method="post" class="check-form">
+        <label for="link">Paste the link, phone number, or message you're unsure about</label>
+        <textarea id="link" name="link" rows="3" placeholder="e.g. https://royal-mail-redelivery.com" required autofocus></textarea>
+        <button type="submit" class="btn-check">Check it</button>
+    </form>
+
+    <p class="reassure">You don't need an account. We don't store what you search.</p>
+</section>
+
+<section class="stats-strip">
+    <div class="stat">
+        <span class="stat-number">{{ stats.total_scans }}</span>
+        <span class="stat-label">links checked so far</span>
+    </div>
+    <div class="stat">
+        <span class="stat-number">{{ stats.total_dangers }}</span>
+        <span class="stat-label">dangerous links caught</span>
+    </div>
+</section>
+
+<section class="help-box">
+    <h2>Worried you've already clicked something bad?</h2>
+    <p>
+        Report it for free to Action Fraud, the UK's national fraud reporting service:
+        <a href="https://www.actionfraud.police.uk" target="_blank" rel="noopener noreferrer">actionfraud.police.uk</a>
+    </p>
+</section>
+{% endblock %}

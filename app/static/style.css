@@ -1,0 +1,219 @@
+/* CheckMyLink UK - simple, high-contrast, large-text styles for
+   non-technical and elderly users on slow connections / old phones. */
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f8;
+    color: #1a1a1a;
+    line-height: 1.5;
+    font-size: 20px;
+}
+
+a { color: #00539f; }
+
+.site-header {
+    background: #00539f;
+    color: #fff;
+    padding: 20px 16px;
+    text-align: center;
+}
+
+.logo {
+    color: #fff;
+    text-decoration: none;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.logo span { font-weight: normal; }
+
+.tagline {
+    margin: 6px 0 0;
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+}
+
+.hero { text-align: center; }
+
+.hero h1 {
+    font-size: 30px;
+    margin-bottom: 8px;
+}
+
+.hero-sub {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 24px;
+}
+
+.check-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+}
+
+.check-form label {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.check-form textarea {
+    font-size: 20px;
+    padding: 14px;
+    border: 2px solid #888;
+    border-radius: 8px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.btn-check {
+    display: block;
+    width: 100%;
+    font-size: 24px;
+    font-weight: bold;
+    padding: 18px;
+    background: #00539f;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    margin-top: 8px;
+}
+
+.btn-check:hover { background: #003d75; }
+
+.btn-secondary {
+    max-width: 640px;
+    margin: 32px auto 0;
+}
+
+.form-error {
+    color: #a30000;
+    font-weight: bold;
+}
+
+.reassure {
+    margin-top: 16px;
+    font-size: 15px;
+    color: #555;
+}
+
+.stats-strip {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 40px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 32px;
+    font-weight: bold;
+    color: #00539f;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #555;
+}
+
+.help-box {
+    margin-top: 32px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.help-box.urgent {
+    background: #fff4f4;
+    border: 2px solid #d40000;
+}
+
+.help-box h2 {
+    font-size: 20px;
+    margin-top: 0;
+}
+
+/* Result page */
+
+.verdict-box {
+    border-radius: 10px;
+    padding: 32px 20px;
+    text-align: center;
+    color: #fff;
+}
+
+.verdict-safe { background: #1b7a2f; }
+.verdict-caution { background: #b8860b; }
+.verdict-danger { background: #c40000; }
+
+.verdict-label {
+    font-size: 36px;
+    font-weight: bold;
+    margin: 0 0 8px;
+}
+
+.verdict-link {
+    font-size: 16px;
+    word-break: break-all;
+    opacity: 0.95;
+    margin: 0;
+}
+
+.reasons-box {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.reasons-box h2 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
+.reasons-list {
+    padding-left: 20px;
+    margin: 0;
+}
+
+.reasons-list li {
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.site-footer {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 16px 40px;
+    text-align: center;
+    font-size: 14px;
+    color: #444;
+}
+
+.take-five { margin-bottom: 12px; }
+
+.disclaimer { color: #666; }
+
+@media (max-width: 400px) {
+    body { font-size: 18px; }
+    .hero h1 { font-size: 26px; }
+    .verdict-label { font-size: 28px; }
+}

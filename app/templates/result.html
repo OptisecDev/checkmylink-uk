@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="verdict-box verdict-{{ verdict_display.colour }}">
+    <p class="verdict-label">{{ verdict_display.label }}</p>
+    <p class="verdict-link">{{ result.url }}</p>
+</section>
+
+<section class="reasons-box">
+    <h2>Why we say this</h2>
+    <ul class="reasons-list">
+        {% for reason in result.reasons %}
+        <li>{{ reason }}</li>
+        {% endfor %}
+    </ul>
+</section>
+
+{% if result.verdict in ["DANGER", "CAUTION"] %}
+<section class="help-box urgent">
+    <h2>What to do next</h2>
+    <p>Do not click the link, reply to it, or share any personal or bank details.</p>
+    <p>
+        You can report it for free to Action Fraud, the UK's national fraud reporting service:
+        <a href="https://www.actionfraud.police.uk" target="_blank" rel="noopener noreferrer">actionfraud.police.uk</a>
+    </p>
+</section>
+{% endif %}
+
+<a href="/" class="btn-check btn-secondary">Check another link</a>
+
+<section class="stats-strip">
+    <div class="stat">
+        <span class="stat-number">{{ stats.total_scans }}</span>
+        <span class="stat-label">links checked so far</span>
+    </div>
+    <div class="stat">
+        <span class="stat-number">{{ stats.total_dangers }}</span>
+        <span class="stat-label">dangerous links caught</span>
+    </div>
+</section>
+{% endblock %}
