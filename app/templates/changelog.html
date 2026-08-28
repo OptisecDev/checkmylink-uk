@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Changelog - CheckMyLink UK{% endblock %}
+
+{% block content %}
+<section class="page-box">
+    <h1>Changelog</h1>
+    <p>A simple, plain-English record of what's been added or fixed on CheckMyLink UK so far.</p>
+
+    <div class="changelog-entry">
+        <span class="changelog-date">28 August 2026</span>
+        <p><strong>Major expansion: message scanning, phone checks, and more.</strong></p>
+        <ul>
+            <li>You can now paste a whole message (not just a link) - we pull out any links and phone numbers inside it automatically.</li>
+            <li>New: UK phone number checking against a small list of known scam call patterns.</li>
+            <li>New: detection of common scam pressure phrases, like "act now" or "your account has been suspended".</li>
+            <li>The list of UK brands we check for impersonation has grown from 11 to over 30 - including more banks, PayPal, Amazon UK, utility providers, NHS, DVSA, insurers, and delivery firms.</li>
+            <li>New: shortened links (like bit.ly) are now followed to their real destination before being checked.</li>
+            <li>New: links that use a raw numeric address instead of a proper website name are now flagged.</li>
+            <li>New pages: How it works, About, Changelog, and Feedback.</li>
+        </ul>
+    </div>
+
+    <div class="changelog-entry">
+        <span class="changelog-date">28 August 2026</span>
+        <p>
+            Fixed a gap in our brand-impersonation check: web addresses that contained a real
+            brand's name inside an unrelated address (e.g. "barclays-secure-login.com") were not
+            always being caught. They are now correctly flagged.
+        </p>
+    </div>
+
+    <div class="changelog-entry">
+        <span class="changelog-date">27 August 2026</span>
+        <p>Set up automated testing so every change is checked before it goes live.</p>
+    </div>
+
+    <div class="changelog-entry">
+        <span class="changelog-date">27 August 2026</span>
+        <p>
+            <strong>Initial launch.</strong> CheckMyLink UK went live with our core link checker:
+            malware and phishing list checks, domain age checks, brand impersonation detection,
+            and an SSL certificate check - all combined into one plain-English Safe / Caution /
+            Danger result.
+        </p>
+    </div>
+</section>
+{% endblock %}

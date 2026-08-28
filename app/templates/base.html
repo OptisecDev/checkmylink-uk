@@ -12,11 +12,25 @@
         <p class="tagline">Free help to spot scams and fake links</p>
     </header>
 
+    <nav class="site-nav">
+        <a href="/">Check a link</a>
+        <a href="/how-it-works">How it works</a>
+        <a href="/about">About</a>
+        <a href="/changelog">Changelog</a>
+        <a href="/feedback">Feedback</a>
+    </nav>
+
     <main class="container">
         {% block content %}{% endblock %}
     </main>
 
     <footer class="site-footer">
+        <p class="footer-nav">
+            <a href="/how-it-works">How it works</a> &middot;
+            <a href="/about">About</a> &middot;
+            <a href="/changelog">Changelog</a> &middot;
+            <a href="/feedback">Feedback</a>
+        </p>
         <p class="take-five">
             This site follows the UK's <strong>Take Five to Stop Fraud</strong> advice:
             <strong>Stop &middot; Challenge &middot; Protect</strong>.

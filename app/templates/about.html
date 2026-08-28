@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}About CheckMyLink UK{% endblock %}
+
+{% block content %}
+<section class="page-box">
+    <h1>About CheckMyLink UK</h1>
+    <p>
+        CheckMyLink UK is a free, independent, non-profit tool built to help UK residents
+        quickly sense-check a link, phone number, or message they're unsure about. We are not
+        a bank, a government body, the police, or a paid service - and we will never ask you
+        for your personal or financial details.
+    </p>
+
+    <h2>What we're not affiliated with</h2>
+    <p>
+        CheckMyLink UK is not officially affiliated with Take Five to Stop Fraud, Action Fraud,
+        any bank, or any government department. We built this tool to complement their advice,
+        using free, publicly available data sources - see <a href="/how-it-works">how it works</a>.
+    </p>
+
+    <h2>Our limitations - please read this</h2>
+    <ul>
+        <li>
+            We check against known scam and malware lists. A brand-new scam that hasn't been
+            reported or listed anywhere yet may come back as "Safe" even if it isn't.
+        </li>
+        <li>
+            Our phone number check uses a small, illustrative list of publicly-reported scam
+            number patterns. It is not exhaustive, and scam numbers change constantly.
+        </li>
+        <li>
+            A "Safe" result means we found no known warning signs - it is not a guarantee.
+            Always use your own judgement.
+        </li>
+        <li>
+            If a message pressures you to act urgently, or asks for money, passwords, or personal
+            details, treat it with suspicion regardless of what any tool says.
+        </li>
+    </ul>
+
+    <h2>Take Five to Stop Fraud</h2>
+    <p>
+        This tool is built to complement, not replace, the UK's official
+        <strong>Take Five to Stop Fraud</strong> advice: <strong>Stop &middot; Challenge &middot; Protect</strong>.
+        Learn more at
+        <a href="https://www.takefive-stopfraud.org.uk" target="_blank" rel="noopener noreferrer">takefive-stopfraud.org.uk</a>.
+    </p>
+
+    <h2>Think you've been scammed?</h2>
+    <p>
+        Report it for free to Action Fraud, the UK's national fraud reporting service:
+        <a href="https://www.actionfraud.police.uk" target="_blank" rel="noopener noreferrer">actionfraud.police.uk</a>.
+    </p>
+</section>
+{% endblock %}

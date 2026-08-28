@@ -4,10 +4,16 @@ Combines several free, no-API-key data sources into one plain-English
 verdict: SAFE / CAUTION / DANGER. Every individual signal is wrapped so a
 network failure, timeout, or rate limit degrades to "unable to check X"
 instead of crashing the whole scan.
+
+scan_url() checks a single link. scan_message() is the richer entry point
+used by the web form: it accepts a full pasted message (SMS/email text),
+pulls out any links and phone numbers it contains, and runs everything
+through the checks below.
 """
 
 from __future__ import annotations
 
+import ipaddress
 import socket
 import ssl
 import time
@@ -18,6 +24,9 @@ from urllib.parse import urlparse
 
 import httpx
 
+from app.modules.message_scan import check_pressure_phrases, extract_urls
+from app.modules.phone_check import check_phone_number, extract_phone_numbers
+from app.modules.signal_types import STATUS_CAUTION, STATUS_DANGER, STATUS_SAFE, STATUS_UNKNOWN, Signal
 from app.modules.typosquat import check_typosquatting
 
 CACHE_DIR = Path(__file__).resolve().parent.parent.parent / "data"
@@ -29,18 +38,12 @@ URLHAUS_API_URL = "https://urlhaus-api.abuse.ch/v1/url/"
 
 REQUEST_TIMEOUT = 6.0
 
-STATUS_DANGER = "danger"
-STATUS_CAUTION = "caution"
-STATUS_SAFE = "safe"
-STATUS_UNKNOWN = "unknown"
-
-
-@dataclass
-class Signal:
-    name: str
-    status: str  # danger | caution | safe | unknown
-    reason: str
-    score: int = 0  # contribution to the overall risk score
+# Common link-shortening services. When a link uses one of these, we follow
+# the redirect chain (with a strict timeout/redirect cap) to find the real
+# destination before running the rest of the checks against it.
+SHORTENER_DOMAINS = {"bit.ly", "tinyurl.com", "t.co", "goo.gl", "is.gd", "ow.ly"}
+SHORTENER_TIMEOUT = 5.0
+SHORTENER_MAX_REDIRECTS = 5
 
 
 @dataclass
@@ -51,6 +54,9 @@ class ScanResult:
     reasons: list[str]
     signals: list[Signal] = field(default_factory=list)
     score: int = 0
+    original_url: str = ""
+    extracted_urls: list[str] = field(default_factory=list)
+    extracted_phones: list[str] = field(default_factory=list)
 
 
 def normalise_url(raw: str) -> tuple[str, str]:
@@ -298,6 +304,83 @@ def check_ssl_certificate(domain: str, is_typosquat: bool) -> Signal:
         )
 
 
+def check_direct_ip(domain: str) -> Signal:
+    """Flag links that use a raw IP address instead of a domain name - a
+    common way scam links try to avoid brand/domain-based detection."""
+    if not domain:
+        return Signal("Direct IP address check", STATUS_UNKNOWN, "No domain to check.", 0)
+    try:
+        ipaddress.ip_address(domain)
+        return Signal(
+            name="Direct IP address check",
+            status=STATUS_CAUTION,
+            reason="This link uses a raw IP address instead of a proper website name, which is unusual for a legitimate site and is often used to hide the true destination.",
+            score=20,
+        )
+    except ValueError:
+        return Signal(
+            name="Direct IP address check",
+            status=STATUS_SAFE,
+            reason="This link uses a normal website name, not a raw IP address.",
+            score=0,
+        )
+
+
+def resolve_shortener(url: str, domain: str) -> tuple[Signal, str]:
+    """If `domain` is a known link-shortening service, follow the redirect
+    chain (bounded timeout + redirect cap) to find the real destination.
+    Returns (signal, url_to_scan) - url_to_scan is the resolved destination
+    on success, or the original shortened url if resolution isn't possible
+    or the domain isn't a shortener at all."""
+    if domain not in SHORTENER_DOMAINS:
+        return (
+            Signal(
+                name="URL shortener check",
+                status=STATUS_SAFE,
+                reason="This link does not use a known link-shortening service.",
+                score=0,
+            ),
+            url,
+        )
+    try:
+        with httpx.Client(
+            follow_redirects=True,
+            max_redirects=SHORTENER_MAX_REDIRECTS,
+            timeout=SHORTENER_TIMEOUT,
+        ) as client:
+            resp = client.get(url)
+        final_url = str(resp.url)
+        if final_url and final_url != url:
+            return (
+                Signal(
+                    name="URL shortener check",
+                    status=STATUS_CAUTION,
+                    reason=f"This is a shortened link ({domain}) that redirects to {final_url} - we've checked that real destination too.",
+                    score=10,
+                ),
+                final_url,
+            )
+        return (
+            Signal(
+                name="URL shortener check",
+                status=STATUS_CAUTION,
+                reason="This is a shortened link. Shortened links can hide where they really lead, so please be extra cautious.",
+                score=10,
+            ),
+            url,
+        )
+    except Exception:
+        return (
+            Signal(
+                name="URL shortener check",
+                status=STATUS_CAUTION,
+                reason="This is a shortened link and we could not resolve its real destination in time - please be extra cautious.",
+                score=15,
+            ),
+            url,
+        )
+
+
 # ---------------------------------------------------------------------------
 # Combine everything into one plain-English verdict.
 # ---------------------------------------------------------------------------
@@ -305,9 +388,50 @@ def check_ssl_certificate(domain: str, is_typosquat: bool) -> Signal:
 DANGER_THRESHOLD = 50
 CAUTION_THRESHOLD = 20
 
+# Signals that, on their own, are a confirmed hit and should force a DANGER
+# verdict regardless of the combined score.
+_CONFIRMED_HIT_SIGNAL_NAMES = {"URLhaus malware list", "OpenPhish community feed"}
+
+
+def _has_confirmed_hit(signals: list[Signal]) -> bool:
+    return any(s.status == STATUS_DANGER and s.name in _CONFIRMED_HIT_SIGNAL_NAMES for s in signals)
+
+
+def _verdict_from_score(total_score: int, confirmed_hit: bool) -> str:
+    if confirmed_hit or total_score >= DANGER_THRESHOLD:
+        return "DANGER"
+    if total_score >= CAUTION_THRESHOLD:
+        return "CAUTION"
+    return "SAFE"
+
+
+def _build_reasons(signals: list[Signal], verdict: str) -> list[str]:
+    if verdict == "SAFE":
+        return [
+            "We did not find this link on any known scam or malware list.",
+            "The domain does not resemble a well-known UK brand.",
+            "Always stay cautious with links from unexpected messages, even if we say it looks safe.",
+        ]
+    # Surface the concrete reasons that pushed the score up, most severe first.
+    concerning = [s for s in signals if s.status in (STATUS_DANGER, STATUS_CAUTION)]
+    concerning.sort(key=lambda s: s.score, reverse=True)
+    reasons = [s.reason for s in concerning[:4]]
+    unknowns = [s for s in signals if s.status == STATUS_UNKNOWN]
+    if unknowns and len(reasons) < 4:
+        reasons.append(
+            "We could not fully check every source, so please stay extra cautious with this link."
+        )
+    return reasons
+
 
 def scan_url(raw_input: str) -> ScanResult:
-    url, domain = normalise_url(raw_input)
+    original_url, original_domain = normalise_url(raw_input)
+
+    shortener_signal, resolved_url = resolve_shortener(original_url, original_domain)
+    if resolved_url != original_url:
+        url, domain = normalise_url(resolved_url)
+    else:
+        url, domain = original_url, original_domain
 
     urlhaus_signal = check_urlhaus(url)
     openphish_signal = check_openphish(url)
@@ -315,38 +439,23 @@ def scan_url(raw_input: str) -> ScanResult:
     age_signal = check_domain_age(domain)
     typosquat_signal = check_typosquat_signal(domain)
     ssl_signal = check_ssl_certificate(domain, is_typosquat=typosquat_signal.status == STATUS_DANGER)
+    ip_signal = check_direct_ip(domain)
 
-    signals = [urlhaus_signal, openphish_signal, spamhaus_signal, age_signal, typosquat_signal, ssl_signal]
+    signals = [
+        urlhaus_signal,
+        openphish_signal,
+        spamhaus_signal,
+        age_signal,
+        typosquat_signal,
+        ssl_signal,
+        shortener_signal,
+        ip_signal,
+    ]
 
     total_score = sum(s.score for s in signals)
-
-    # A direct, confirmed hit on a curated blocklist is treated as an
-    # immediate DANGER verdict regardless of the combined score.
-    confirmed_hit = urlhaus_signal.status == STATUS_DANGER or openphish_signal.status == STATUS_DANGER
-
-    if confirmed_hit or total_score >= DANGER_THRESHOLD:
-        verdict = "DANGER"
-    elif total_score >= CAUTION_THRESHOLD:
-        verdict = "CAUTION"
-    else:
-        verdict = "SAFE"
-
-    if verdict == "SAFE":
-        reasons = [
-            "We did not find this link on any known scam or malware list.",
-            "The domain does not resemble a well-known UK brand.",
-            "Always stay cautious with links from unexpected messages, even if we say it looks safe.",
-        ]
-    else:
-        # Surface the concrete reasons that pushed the score up, most severe first.
-        concerning = [s for s in signals if s.status in (STATUS_DANGER, STATUS_CAUTION)]
-        concerning.sort(key=lambda s: s.score, reverse=True)
-        reasons = [s.reason for s in concerning[:4]]
-        unknowns = [s for s in signals if s.status == STATUS_UNKNOWN]
-        if unknowns and len(reasons) < 4:
-            reasons.append(
-                "We could not fully check every source, so please stay extra cautious with this link."
-            )
+    confirmed_hit = _has_confirmed_hit(signals)
+    verdict = _verdict_from_score(total_score, confirmed_hit)
+    reasons = _build_reasons(signals, verdict)
 
     return ScanResult(
         url=url,
@@ -355,4 +464,72 @@ def scan_url(raw_input: str) -> ScanResult:
         reasons=reasons,
         signals=signals,
         score=total_score,
+        original_url=original_url,
+    )
+
+
+def scan_message(raw_text: str) -> ScanResult:
+    """Top-level entry point used by the web form. Accepts either a single
+    pasted link, or a full message (SMS/email text) - in the latter case it
+    extracts any links and phone numbers found within it and checks each of
+    them, plus looks for common scam pressure-tactic phrasing."""
+    raw_text = (raw_text or "").strip()
+
+    if not raw_text:
+        return ScanResult(
+            url="",
+            domain="",
+            verdict="SAFE",
+            reasons=["Please paste a link, phone number, or message to check."],
+            signals=[],
+            score=0,
+        )
+
+    urls = extract_urls(raw_text)
+    phones = extract_phone_numbers(raw_text)
+
+    # A single bare link/domain with nothing else pasted - scan it directly
+    # so behaviour matches scanning that link on its own.
+    if len(urls) == 1 and not phones and raw_text == urls[0]:
+        return scan_url(urls[0])
+
+    pressure_signal = check_pressure_phrases(raw_text)
+
+    if not urls and not phones:
+        # Nothing recognised as a link or phone number - fall back to
+        # treating the whole input as a single URL/domain (e.g. a bare
+        # "amazon.co.uk" that our extraction regex happens to miss), and
+        # still fold in the pressure-language check.
+        result = scan_url(raw_text)
+        result.signals.append(pressure_signal)
+        result.score += pressure_signal.score
+        result.verdict = _verdict_from_score(result.score, _has_confirmed_hit(result.signals))
+        result.reasons = _build_reasons(result.signals, result.verdict)
+        return result
+
+    url_results = [scan_url(u) for u in urls]
+    phone_signals = [check_phone_number(p) for p in phones]
+
+    signals: list[Signal] = []
+    for sr in url_results:
+        signals.extend(sr.signals)
+    signals.extend(phone_signals)
+    signals.append(pressure_signal)
+
+    total_score = sum(s.score for s in signals)
+    confirmed_hit = _has_confirmed_hit(signals)
+    verdict = _verdict_from_score(total_score, confirmed_hit)
+    reasons = _build_reasons(signals, verdict)
+
+    primary = url_results[0] if url_results else None
+    return ScanResult(
+        url=primary.url if primary else "",
+        domain=primary.domain if primary else "",
+        verdict=verdict,
+        reasons=reasons,
+        signals=signals,
+        score=total_score,
+        original_url=primary.original_url if primary else "",
+        extracted_urls=urls,
+        extracted_phones=phones,
     )

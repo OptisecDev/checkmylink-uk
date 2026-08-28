@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}How CheckMyLink UK works{% endblock %}
+
+{% block content %}
+<section class="page-box">
+    <h1>How CheckMyLink UK works</h1>
+    <p>
+        When you paste a link, phone number, or message, we run it through several free,
+        publicly available safety checks and combine the results into one simple answer:
+        Safe, Use Caution, or Danger. Here's what each check actually does, in plain English.
+    </p>
+
+    <h2>URLhaus</h2>
+    <p>
+        A free, community-run list of web addresses known to spread malware (harmful software
+        that can damage your device or steal your information). If your link is on this list,
+        it's a confirmed danger.
+    </p>
+
+    <h2>OpenPhish</h2>
+    <p>
+        A free, community-run list of web addresses confirmed to be phishing sites - fake pages
+        designed to look like a real bank or company so they can steal your login details or money.
+    </p>
+
+    <h2>Spamhaus DBL (Domain Block List)</h2>
+    <p>
+        A trusted, widely-used industry list of website addresses known to be used for spam,
+        scams, or malware. We check whether the site's domain name appears on it.
+    </p>
+
+    <h2>WHOIS domain age</h2>
+    <p>
+        We check how long ago a website's address was first registered. Scam websites are often
+        set up only days before they're used, then abandoned. A very new domain is not proof of
+        a scam on its own, but it is a useful warning sign.
+    </p>
+
+    <h2>Typosquatting / brand impersonation detection</h2>
+    <p>
+        We compare the web address against a list of major UK banks, government services, and
+        well-known brands. If it's a near-miss spelling of a real brand (like "barclay-secure.com"
+        instead of "barclays.co.uk"), or the brand's name appears inside an unrelated web address,
+        we flag it.
+    </p>
+
+    <h2>SSL certificate check</h2>
+    <p>
+        Most legitimate websites use a security certificate (shown as a padlock in your browser)
+        to encrypt your connection. We check how old that certificate is - a brand-new certificate
+        on a site that's also impersonating a well-known brand is an extra warning sign.
+    </p>
+
+    <h2>Phone number check</h2>
+    <p>
+        If you paste a UK phone number, or one appears inside a pasted message, we check it against
+        a small, publicly-documented list of number patterns commonly linked to scam calls - such as
+        premium-rate numbers, and international dialling codes often used in "missed call" callback
+        scams.
+    </p>
+
+    <h2>URL shortener resolution</h2>
+    <p>
+        Scammers sometimes use link-shortening services (like bit.ly) to hide where a link really
+        goes. When we spot one of these, we follow it - safely, with a strict time limit - to find
+        the real destination, then run every check above against that real destination too.
+    </p>
+
+    <p>
+        No single check is perfect on its own, which is why we combine all of them into one overall
+        result. Read about our limitations on the <a href="/about">About page</a>.
+    </p>
+</section>
+{% endblock %}

@@ -14,17 +14,53 @@ from dataclasses import dataclass
 
 # Brand -> the legitimate domain(s) a scam link would try to imitate.
 UK_BRANDS: dict[str, list[str]] = {
+    # Banks
     "Barclays": ["barclays.co.uk"],
     "HSBC": ["hsbc.co.uk"],
     "Lloyds Bank": ["lloydsbank.com", "lloyds.co.uk"],
     "NatWest": ["natwest.com"],
     "Santander UK": ["santander.co.uk"],
+    "Nationwide Building Society": ["nationwide.co.uk"],
+    "Halifax": ["halifax.co.uk"],
+    "TSB Bank": ["tsb.co.uk"],
+    "Monzo": ["monzo.com"],
+    "Starling Bank": ["starlingbank.com"],
+    "Metro Bank": ["metrobankonline.co.uk"],
+    "Royal Bank of Scotland": ["rbs.co.uk"],
+    "First Direct": ["firstdirect.com"],
+    "Co-operative Bank": ["co-operativebank.co.uk"],
+    "Bank of Scotland": ["bankofscotland.co.uk"],
+    # Payments / retail
+    "PayPal": ["paypal.com", "paypal.co.uk"],
+    "Amazon UK": ["amazon.co.uk"],
+    # Delivery / logistics
     "Royal Mail": ["royalmail.com"],
-    "HMRC": ["gov.uk", "hmrc.gov.uk"],
-    "DVLA": ["gov.uk", "dvla.gov.uk"],
-    "TV Licensing": ["tvlicensing.co.uk"],
     "DPD": ["dpd.co.uk"],
     "Evri": ["evri.com"],
+    "Yodel": ["yodel.co.uk"],
+    "Parcelforce": ["parcelforce.com"],
+    "DHL UK": ["dhl.co.uk"],
+    "UPS UK": ["ups.com"],
+    # Government / public services
+    "HMRC": ["gov.uk", "hmrc.gov.uk"],
+    "DVLA": ["gov.uk", "dvla.gov.uk"],
+    "DVSA": ["gov.uk", "dvsa.gov.uk"],
+    "TV Licensing": ["tvlicensing.co.uk"],
+    "Council Tax": ["gov.uk"],
+    "NHS": ["nhs.uk"],
+    # Utilities
+    "British Gas": ["britishgas.co.uk"],
+    "EDF Energy": ["edfenergy.com"],
+    "E.ON": ["eonenergy.com"],
+    "Octopus Energy": ["octopus.energy"],
+    "Thames Water": ["thameswater.co.uk"],
+    "Scottish Power": ["scottishpower.co.uk"],
+    # Insurance
+    "Aviva": ["aviva.co.uk"],
+    "Direct Line": ["directline.com"],
+    "Admiral Insurance": ["admiral.com"],
+    "AXA UK": ["axa.co.uk"],
+    "LV= Insurance": ["lv.com"],
 }
 
 # Legit "domains" that are too generic to safely anchor a "this hostname is

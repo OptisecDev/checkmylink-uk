@@ -9,4 +9,5 @@ env/
 .env
 data/stats.json
 data/openphish_cache.txt
+data/feedback.json
 *.log
