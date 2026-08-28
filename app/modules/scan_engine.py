@@ -392,15 +392,26 @@ CAUTION_THRESHOLD = 20
 # verdict regardless of the combined score.
 _CONFIRMED_HIT_SIGNAL_NAMES = {"URLhaus malware list", "OpenPhish community feed"}
 
+# Signals that are a confirmed match against a documented scam *pattern*
+# (not just a mild heuristic like pressure-tactic wording) and should force
+# the verdict to at least CAUTION even when the combined score alone
+# wouldn't cross CAUTION_THRESHOLD - e.g. a phone-only input where the
+# phone check is the only signal that fired.
+_CONFIRMED_CAUTION_SIGNAL_NAMES = {"Phone number check"}
+
 
 def _has_confirmed_hit(signals: list[Signal]) -> bool:
     return any(s.status == STATUS_DANGER and s.name in _CONFIRMED_HIT_SIGNAL_NAMES for s in signals)
 
 
-def _verdict_from_score(total_score: int, confirmed_hit: bool) -> str:
+def _has_confirmed_caution(signals: list[Signal]) -> bool:
+    return any(s.status == STATUS_CAUTION and s.name in _CONFIRMED_CAUTION_SIGNAL_NAMES for s in signals)
+
+
+def _verdict_from_score(total_score: int, confirmed_hit: bool, confirmed_caution: bool = False) -> str:
     if confirmed_hit or total_score >= DANGER_THRESHOLD:
         return "DANGER"
-    if total_score >= CAUTION_THRESHOLD:
+    if confirmed_caution or total_score >= CAUTION_THRESHOLD:
         return "CAUTION"
     return "SAFE"
 
@@ -503,7 +514,9 @@ def scan_message(raw_text: str) -> ScanResult:
         result = scan_url(raw_text)
         result.signals.append(pressure_signal)
         result.score += pressure_signal.score
-        result.verdict = _verdict_from_score(result.score, _has_confirmed_hit(result.signals))
+        result.verdict = _verdict_from_score(
+            result.score, _has_confirmed_hit(result.signals), _has_confirmed_caution(result.signals)
+        )
         result.reasons = _build_reasons(result.signals, result.verdict)
         return result
 
@@ -518,7 +531,8 @@ def scan_message(raw_text: str) -> ScanResult:
 
     total_score = sum(s.score for s in signals)
     confirmed_hit = _has_confirmed_hit(signals)
-    verdict = _verdict_from_score(total_score, confirmed_hit)
+    confirmed_caution = _has_confirmed_caution(signals)
+    verdict = _verdict_from_score(total_score, confirmed_hit, confirmed_caution)
     reasons = _build_reasons(signals, verdict)
 
     primary = url_results[0] if url_results else None

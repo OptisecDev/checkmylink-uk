@@ -285,3 +285,34 @@ class TestScanMessage:
         assert result.extracted_phones and not result.extracted_urls
         assert any(s.name == "Phone number check" and s.status == STATUS_CAUTION for s in result.signals)
         assert result.verdict in ("SAFE", "CAUTION", "DANGER")
+
+    def test_standalone_phone_number_matching_scam_pattern_is_not_silently_safe(self):
+        # Regression test: a bare "09..." premium-rate number with no URL or
+        # message text used to slip through as a plain "Looks Safe" with no
+        # phone-specific reason, because the phone signal's score (15) never
+        # crossed CAUTION_THRESHOLD (20) on its own. A confirmed match
+        # against a documented scam pattern must surface as CAUTION with the
+        # concrete reason, not disappear into the generic SAFE reasons.
+        result = scan_message("09012345678")
+
+        assert result.extracted_phones == ["09012345678"]
+        assert not result.extracted_urls
+        phone_signals = [s for s in result.signals if s.name == "Phone number check"]
+        assert len(phone_signals) == 1
+        assert phone_signals[0].status == STATUS_CAUTION
+
+        assert result.verdict != "SAFE"
+        assert any("09" in reason and "premium-rate" in reason for reason in result.reasons)
+
+    def test_standalone_phone_number_not_matching_any_pattern_is_safe(self):
+        # An ordinary UK mobile number with nothing else pasted should stay
+        # SAFE - this is the correct, intended behaviour (not a gap).
+        result = scan_message("07911123456")
+
+        assert result.extracted_phones == ["07911123456"]
+        assert not result.extracted_urls
+        phone_signals = [s for s in result.signals if s.name == "Phone number check"]
+        assert len(phone_signals) == 1
+        assert phone_signals[0].status == STATUS_SAFE
+
+        assert result.verdict == "SAFE"
