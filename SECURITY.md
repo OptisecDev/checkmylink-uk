@@ -31,7 +31,11 @@ resolved. Coordinated disclosure is appreciated.
 
 ## Supported Versions | الإصدارات المدعومة
 
-Only the latest released version (`v1.x`) receives security fixes.
+Only the latest version of `checkmylink-uk` on the `master` branch receives security fixes.
+Older commits, unofficial builds, and forks are not supported.
+
+**AR:** يحصل على إصلاحات الأمان أحدث إصدار من `checkmylink-uk` على الفرع `master` فقط،
+ولا تُدعم الإصدارات القديمة أو النسخ غير الرسمية أو الـforks.
 
 ## What Is NOT Considered a Vulnerability | ما لا يُعد ثغرة
 
@@ -39,8 +43,8 @@ The following are generally **out of scope**:
 
 - Findings that require physical access to a user's machine, or an already
   root/administrator-compromised host.
-- Issues that depend on running the tool against networks or devices you are
-  **not authorized** to monitor (this tool is for authorized defense only).
+- Issues that depend on testing against systems, networks, accounts, or data
+  you are **not authorized** to test.
 - Missing security hardening that has no demonstrable, exploitable impact
   (e.g. "best practice" suggestions without a working attack).
 - Reports produced solely by automated scanners without a verified,
